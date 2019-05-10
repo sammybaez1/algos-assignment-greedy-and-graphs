@@ -1,7 +1,7 @@
 /**
  * Public Transit
- * Author: Your Name and Carolyn Yao
- * Does this compile? Y/N
+ * Author: Sammy Baez and Carolyn Yao
+ * Does this compile? Y
  */
 
 /**
@@ -32,9 +32,88 @@ public class FastestRoutePublicTransit {
     int[][] first,
     int[][] freq
   ) {
-    // Your code along with comments here. Feel free to borrow code from any
-    // of the existing method. You can also make new helper methods.
-    return 0;
+	  int numVertices = lengths[0].length;
+	  int totalWaitTime = 0;
+
+	  //Will keep track of what the current time would be if we'd have taken a certain path between vertex u and v 
+	  int simulatedCurrentTime[]=  new int[numVertices]; 
+	  //We start at source station at given start Time
+	  simulatedCurrentTime[S] = startTime;  
+
+	  int currentTime = simulatedCurrentTime[S];
+
+	  /*This will keep track of the parent of the current station so that 
+	   * we can get the accurate current time by adding up the waitTime of all the stations 
+	   * in the path that lead to the current station we're looking at 
+	   */
+	  int parent[] = new int[numVertices];
+
+	  parent[S] = -1;// Source station has no parent 
+
+	  // This is the array where we'll store all the final shortest times
+	  int[] times = new int[numVertices];
+
+	  // processed[i] will true if vertex i's shortest time is already finalized
+	  Boolean[] processed = new Boolean[numVertices];
+
+	  // Initialize all distances as INFINITE and processed[] as false
+	  for (int v = 0; v < numVertices; v++) {
+		  times[v] = Integer.MAX_VALUE;
+		  processed[v] = false;
+	  }
+
+	  // Distance of source vertex from itself is always 0
+	  times[S] = 0;
+
+	  // Find shortest path to all the vertices
+	  for (int count = 0; count < numVertices - 1 ; count++) {
+		  // Pick the minimum distance vertex from the set of vertices not yet processed.
+		  // u is always equal to source in first iteration.
+		  // Mark u as processed.
+		  int u = findNextToProcess(times, processed);
+		  processed[u] = true;
+		  if(parent[u] != -1){//If the current station is not the start station, get the current time 
+			  currentTime = simulatedCurrentTime[u];
+		  }
+		  else{
+			  currentTime = startTime;
+		  }
+		  // Update time value of all the adjacent vertices of the picked vertex.
+		  for (int v = 0; v < numVertices; v++) {
+			  if(!processed[v] && lengths[u][v]!=0){
+				  //Parent of this station is the current station we're processing
+				  parent[v] = u;
+				  //This is the case where the first train has not arrived, so wait time will be the sum
+				  // of waiting for the first train to arrive and the time it takes to reach the next station
+				  if(u != v  && first[u][v] > currentTime){
+					  totalWaitTime = (first[u][v] - currentTime) + lengths[u][v];
+				  }
+
+				  /* This is the case where the first train has already arrived, 
+				   * wait time will be the sum of waiting for the next train and the time it takes to reach the next station
+				   * waiting for the next train to arrive will be simulated by 
+				   * looping and adding the freq[u][v] to first[u][v] until next train arrival > the current time 
+				   */
+				  else if(u != v && first[u][v] < currentTime){
+					  int nextTrainTime = first[u][v];
+					  while(nextTrainTime  < currentTime){
+						  nextTrainTime += freq[u][v];
+					  }
+					  totalWaitTime = (nextTrainTime - currentTime) + lengths[u][v];
+				  }
+
+				  // Update time[v] if total weight of path from source to v through u is smaller than current value of time[v]
+				  if (times[u] != Integer.MAX_VALUE && times[u]+totalWaitTime < times[v]) {
+					  times[v] = times[u] + totalWaitTime;
+					  //If the algorithm comes back this station we'll be able to check what the current time was at this station 
+					  simulatedCurrentTime[v] += simulatedCurrentTime[parent[v]] + totalWaitTime;
+				  }
+			  }
+
+		  }
+	  }
+
+	  return times[T];
   }
 
   /**
@@ -125,5 +204,35 @@ public class FastestRoutePublicTransit {
     t.shortestTime(lengthTimeGraph, 0);
 
     // You can create a test case for your implemented method for extra credit below
+    int lengthTimeGraph2[][] = new int[][]{
+    	{0, 3, 0, 6, 0},
+    	{3, 0, 2, 0, 7},
+    	{0, 2, 0, 0, 5},
+    	{6, 0, 0, 0, 4},
+    	{0, 7, 5, 4, 0},
+    };
+
+
+    int firstTimeGraph[][] = new int[][]{
+    	{-1, 10, -1, 30, -1},
+    	{10, -1, 0, -1, 5},
+    	{-1, 0, -1, -1, 20},
+    	{30, -1, -1, -1, 25},
+    	{-1, 5, 20, 25, -1},
+    };
+
+
+    int freqTimeGraph[][] = new int[][]{
+    	{0, 5, 0, 3, 0},
+    	{5, 0, 10, 0, 6},
+    	{0, 10, 0, 0, 7},
+    	{3, 0, 0, 0, 7},
+    	{0, 6, 7, 7, 0},
+    };
+    
+       int time = t.myShortestTravelTime(0, 4, 3, lengthTimeGraph2, firstTimeGraph, freqTimeGraph);
+       System.out.println("Travel time from 0 to 4 is : " +  time);
+    
   }
 }
+
