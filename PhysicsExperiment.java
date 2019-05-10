@@ -1,7 +1,7 @@
 /**
  * Physics Experiment
- * Author: Your Name and Carolyn Yao
- * Does this compile or finish running within 5 seconds? Y/N
+ * Author: Sammy Baez and Carolyn Yao
+ * Does this compile or finish running within 5 seconds? Y
  */
 
 /**
@@ -35,11 +35,54 @@ public class PhysicsExperiment {
   ) {
     // Your scheduleTable is initialized as all 0's so far. Your code will put 1's
     // in the table in the right places based on the return description
-    int[][] scheduleTable = new int[numStudents + 1][numSteps + 1];
+	  int[][] scheduleTable = new int[numStudents + 1][numSteps + 1];
 
-    // Your code goes here
+	  // Your code goes here
+	  int processedStudent[] = new int [numStudents+1];//Checks if student is already in schedule table
+	  int stepsLeft = numSteps; //steps left to assign
+	  int[] assignedStep = new int[numSteps + 1 ];// assignedStep[1] = 1 if step 1 has been assigned a student, 0 otherwise;  
 
-    return scheduleTable;
+	  int stepsAbleToComplete = 0;
+
+	  int maxStudent = 0;
+	  int maxSteps = Integer.MIN_VALUE;
+
+	  while(stepsLeft > 0){
+		  for(int i = 1; i < signUpTable.length; i++){
+			  if(processedStudent[i] != 1){ //Ignore students that are already assigned 
+				  for(int j = 1; j < signUpTable[0].length; j++){
+					  if(signUpTable[i][j] == 1 && assignedStep[j] != 1){//If a step is already assigned to a student then we can't assign another student to it
+						  stepsAbleToComplete++; 
+					  }
+				  }
+				  //Algorithm will always choose student that can complete the most steps 
+				  if(stepsAbleToComplete > maxSteps){
+					  maxSteps = stepsAbleToComplete;
+					  maxStudent = i;
+				  }
+
+				  stepsAbleToComplete = 0;
+
+			  }
+
+		  }
+
+		  processedStudent[maxStudent] = 1;
+		  stepsLeft -= maxSteps;
+
+		  //sign up student;
+		  for(int i = 1; i < signUpTable[0].length; i++){
+			  if(signUpTable[maxStudent][i] == 1 && assignedStep[i] != 1){
+				  scheduleTable[maxStudent][i] = 1;
+				  assignedStep[i] = 1;
+
+			  }
+		  }
+
+		  maxSteps = Integer.MIN_VALUE;
+	  }
+
+	  return scheduleTable;
   }
 
   /**
